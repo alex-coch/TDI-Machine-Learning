@@ -22,7 +22,9 @@ cap =cv2.VideoCapture("night1.mp4")
 flag = True
 # #Prompt user to draw 2 lines
 _, img = cap.read()
-
+# TODO
+img = img[round(img.shape[0]/2):, :]
+# print(img.shape)
 
 line1,line2 = get_points(img)
 
@@ -44,8 +46,8 @@ else:
     lasttrack = (int(midtrack-starttrack)*2)+l2_y1
 
 print(starttrack)
+print(midtrack)
 print(lasttrack)
-
 
 if cap.isOpened() == False:
   print("Video Not available")
@@ -53,6 +55,7 @@ if cap.isOpened() == False:
 while(cap.isOpened()):
   start = timeit.default_timer()
   ret, frame = cap.read()
+  frame = frame[round(frame.shape[0]/2):, :]
   # framespersecond= int(cap.get(cv2.CAP_PROP_FPS))
   # print(framespersecond)
   if ret == True:
@@ -68,20 +71,22 @@ while(cap.isOpened()):
     gray = cv2.GaussianBlur(gray, (41, 41), 0)
    
     (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
-
+    print(minVal, maxVal, minLoc, maxLoc)
     #to find speed 
     cx,cy = maxLoc
-    print("cy",cy)
+q
+    # cy -= round(img.shape[0]/2)
+    print("cy", cy)
     if cy > starttrack:
       if flag is True and cy < midtrack:
-        starttime= datetime.datetime.now()
+        starttime = datetime.datetime.now()
         flag = False
       if cy> midtrack and cy< lasttrack:
-        endtime = datetime.datetime.now()
+        endtime  = datetime.datetime.now()
         print('endtime', endtime)
         timedelta = (endtime - starttime).total_seconds()
-        print(timedelta)
-        speed = (distance/timedelta)
+        print('timedelta', timedelta)
+        speed = ('speed', distance/timedelta)
         print(speed)
     cv2.circle(frame, maxLoc, 10, (255, 0, 255), -1)
     cv2.line(frame, (l1_x1, l1_y1), (l1_x2, l1_y2), (0, 255, 0), 1)
