@@ -48,7 +48,6 @@ else:
     lasttrack = (int(midtrack-starttrack)*2)+l2_y1
 
 print(starttrack)
-print(midtrack)
 print(lasttrack)
           
 #collect mask 
@@ -136,7 +135,7 @@ while(cap.isOpened()):
         contours_info.append([cID,frameID,c_centroid,br_centroid,c_area,c_perimeter,c_convexity,w,h])
     if score <60:
       framespersecond= int(cap.get(cv2.CAP_PROP_FPS))
-      # print(framespersecond)
+      print(framespersecond)
     if ret == True:
       h,w,_=(frame.shape)
       y=0
@@ -154,7 +153,7 @@ while(cap.isOpened()):
 
       #to find speed 
       cx,cy = maxLoc
-      # print("cy",cy)
+      print("cy",cy)
       if cy > starttrack:
         if flag is True and cy < midtrack:
           print("detection start",cy)
@@ -172,7 +171,6 @@ while(cap.isOpened()):
           Angle = math.cos(Angle)
           speed1 = speed1*Angle               #COSINE CORRECTION 
           print("SPEED1",speed1)
-          flag = True
           
       cv2.circle(frame, maxLoc, 10, (255, 0, 255), -1)
       cv2.line(frame, (l1_x1, l1_y1), (l1_x2, l1_y2), (0, 255, 0), 1)
@@ -184,8 +182,8 @@ while(cap.isOpened()):
       break
 
   # Break the loop
-  # else:
-  #   break
+  else: 
+    break
 end = timeit.default_timer()
 cap.release()
 
