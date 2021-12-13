@@ -1,11 +1,27 @@
-import argparse
+import cv2 as cv
+import numpy
 
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('integers', metavar='N', type=int, nargs='+',
-                    help='an integer for the accumulator')
-parser.add_argument('--sum', dest='accumulate', action='store_const',
-                    const=sum, default=max,
-                    help='sum the integers (default: find the max)')
 
-args = parser.parse_args()
-print(args.accumulate(args.integers))
+
+# cap = cv.VideoCapture('rtsp://admin:ats12345@127.0.0.1/cam/realmonitor?channel=1&subtype=0')
+cap = cv.VideoCapture(0)
+
+if not cap.isOpened():
+    print("Cannot open camera")
+    exit()
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    # if frame is read correctly ret is True
+    if not ret:
+        print("Can't receive frame (stream end?). Exiting ...")
+        break
+    # Our operations on the frame come here
+    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    # Display the resulting frame
+    cv.imshow('frame', frame)
+    if cv.waitKey(1) == ord('q'):
+        break
+# When everything done, release the capture
+cap.release()
+cv.destroyAllWindows()

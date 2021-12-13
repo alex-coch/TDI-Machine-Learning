@@ -43,7 +43,7 @@ Angle = 0
 
 
 # Initialize the video & get FPS
-cap = cv2.VideoCapture('day.mp4')
+cap = cv2.VideoCapture('night1.mp4')
 fps = cap.get(cv2.CAP_PROP_FPS)
 
 lane_1_1 = []
@@ -58,6 +58,7 @@ with open(road_cropped,'rb')as f:
     print(mask_list[1])
 
 #getting mask
+mask11 = cv2.imread('m1.jpeg', 0)
 mask1 = cv2.imread('m1.jpeg')
 mask1 = cv2.cvtColor(mask1, cv2.COLOR_BGR2GRAY)
 ret1, thresh_MASK_1 = cv2.threshold(mask1, 127, 255, cv2.THRESH_BINARY_INV)
@@ -65,7 +66,8 @@ mask2 = cv2.imread('m2.jpeg')
 mask2 = cv2.cvtColor(mask2, cv2.COLOR_BGR2GRAY)
 ret2, thresh_MASK_2 = cv2.threshold(mask2, 127, 255, cv2.THRESH_BINARY_INV)
 
-
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter('output.avi',fourcc, 20, (640,480), True)
 
 # Create the background subtraction object
 method = 1
@@ -325,7 +327,9 @@ while True:
       framespersecond= int(cap.get(cv2.CAP_PROP_FPS))
       # print(framespersecond)
       if ret == True:
-        h,w,_=(frame.shape)
+        mask_frame = cv2.bitwise_and(frame, frame, mask=mask11)
+
+        h,w,_=(mask_frame.shape)
         y=0
         x=0
         # print(frame.shape)
@@ -333,7 +337,8 @@ while True:
 
         #roi = frame[int(y+h/2):int(y+h),x: int(x+w)]
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(mask_frame, cv2.COLOR_BGR2GRAY)
+        # gray = cv2.cvtColor(thresh1, cv2.COLOR_BGR2GRAY)
 
         gray = cv2.GaussianBlur(gray, (41, 41), 0)
 
@@ -371,7 +376,14 @@ while True:
         cv2.line(frame, (l2_x1, l2_y1), (l2_x2, l2_y2), (0, 0, 255), 1)
         cv2.line(frame, (l1_x1, int((lasttrack))), (l1_x2, int((lasttrack))),(0, 0, 0), 1)
         # cv2.imshow('Robust', frame_og)
+        # cv2.imshow("Robust", frame)
+        # cv2.imshow("Robust", thresh1)
         cv2.imshow("Robust", frame)
+        # out.write(frame)
+
+
+
+
         k = cv2.waitKey(1) & 0xff
         if k == ord('q'):
             break
@@ -427,4 +439,5 @@ while True:
 #     cv2.line(frame, (l1_x1, int((lasttrack))), (l1_x2, int((lasttrack))),(0, 0, 0), 1)
 #     cv2.imshow("Robust", frame)
 cap.release()
+out.release()
 cv2.destroyAllWindows()
