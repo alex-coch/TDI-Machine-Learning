@@ -16,7 +16,8 @@ import pickle
 
 
 #API endpoint
-api = 'https://tdispeeddetection.free.beeceptor.com/success'
+#api = 'https://tdispeeddetection.free.beeceptor.com/success'  
+api = 'https://tdinightday.free.beeceptor.com/success'
 
 speed_limit = int(input('Enter The Speed Limit: '))
 distance =int(input('Enter distance between 2 lines in Meters(for better results use 10 Meters): '))
@@ -41,10 +42,27 @@ Angle = show_angle(speed_limit) #get Angle input
 
 
 
+
+# Play until the user decides to stop    ## SENDING IMAGES TO SERVER FOR PROCESSING THERE>>>>>>>>>>>>>>>>>>>>>
+#for sending data to server
+def send(img):
+    retval, buffer = cv2.imencode(".jpg", img)
+    img = base64.b64encode(buffer).decode('utf-8')
+    data = json.dumps({"image1": img, "id" : "2345AB"})
+    response = requests.post(api, data=data, timeout=5, headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})
+    try:
+       data = response.json()     
+       print(data)                
+    except requests.exceptions.RequestException:
+       print(response.text)
+
+
 # Initialize the video & get FPS
-cap = cv2.VideoCapture('night1.mp4')
+cap = cv2.VideoCapture('day.mp4')
 fps = cap.get(cv2.CAP_PROP_FPS)
 
+
+# Collects ROI cropped images from lanes 
 lane_1_1 = []
 lane_1_2 = []
 
@@ -168,7 +186,10 @@ while True:
     flag2 = True
     start = timeit.default_timer()
     ret, frame = cap.read()
-    score = np.average(np.linalg.norm(frame, axis=2)) / np.sqrt(3)
+    if ret:
+        score = np.average(np.linalg.norm(frame, axis=2)) / np.sqrt(3)
+    else:
+        continue
     if score > 60: # DAY TIME
         framespersecond= int(cap.get(cv2.CAP_PROP_FPS))
         print(framespersecond)
@@ -222,9 +243,8 @@ while True:
                 if flag is True and cy <midtrack:
                     print("cy",cy)
                     start_time = datetime.datetime.now()
-
                     flag = False
-                if cy > midtrack and cy < pt3_pxl:
+                if flag is False and cy > midtrack and cy < pt3_pxl:
                     later = datetime.datetime.now()
                     seconds = (later - start_time).total_seconds()
                     frame_crossed1 = seconds*framespersecond
@@ -256,9 +276,10 @@ while True:
                                 # cv2.imwrite(write_name, roi)
                                 # cv2.imwrite(os.path.join(path, 'carimage_l2_' + str(cnt1)) + '.jpg', roi)
                                 cnt += 1
-                        flag = True
+                        # flag = True
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(frame, str(int(speed)), (x, y), font, 2, (255, 255, 255), 8, cv2.LINE_AA)
+                    flag = True
 
             contours1, hierarchy1= cv2.findContours(thresh2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -282,7 +303,7 @@ while True:
                 if flag1 is True and cy1 < midtrack:
                     start_time1 = datetime.datetime.now()
                     flag1 = False
-                if cy1> midtrack and cy1 < pt3_pxl:
+                if flag1 is False and cy1> midtrack and cy1 < pt3_pxl:
                     later1 = datetime.datetime.now()
                     seconds1 = (later1 - start_time1).total_seconds()
                     frame_crossed2 = seconds1*framespersecond
@@ -311,6 +332,7 @@ while True:
                         flag1 = True
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(frame_og, str(int(speed1)), (x1, y1), font, 2, (255, 255, 255), 8, cv2.LINE_AA)
+                    flag1 = True
             #cv2.imshow('background subtraction', foregroundMask)
             #cv2.imshow('Sub',thresh)
             #cv2.imshow('Sub', thresh1)
@@ -326,7 +348,7 @@ while True:
     #     break
     else:   #NIGHT TIME 
         flag2 = True
-        list_speed =[]
+        list_speed=[]
        
         framespersecond= int(cap.get(cv2.CAP_PROP_FPS))
    
@@ -343,38 +365,42 @@ while True:
         cx2,cy2 = maxLoc
         print("cx",cx2)
         print("cy2",cy2)
-    if cy2 > starttrack:
-        if flag2 is True and cy2 < midtrack:
-            starttime= datetime.datetime.now()
-            print("starttime_night",starttime)
-            print("STARTTrack",starttrack)
-            print("MID",midtrack)
-            flag2 = False
-        if cy2> midtrack and cy2< lasttrack:
-            endtime = datetime.datetime.now()
-            print("endtime_night",endtime)
-            timedelta = (endtime - starttime).total_seconds()
-            frame_crossed3 = timedelta*framespersecond
-            speed1 = (distance/frame_crossed3)*framespersecond*3.6
-            Angle = math.radians(Angle)
-            Angle = math.cos(Angle)
-            speed_night = speed1*Angle 
-            list_speed.append(speed_night)
-            #cal avg speed 
-            avg_speed = sum(list_speed)/len(list_speed)
+        if cy2 > starttrack:
+            if flag2 is True and cy2 < midtrack:
+                starttime= datetime.datetime.now()
+                flag2 = False
+            if cy2> midtrack and cy2< lasttrack:
+                endtime = datetime.datetime.now()
+                timedelta = (endtime - starttime).total_seconds()
+                frame_crossed3 = timedelta*framespersecond
+                speed1 = (distance/frame_crossed3)*framespersecond*3.6
+                Angle = math.radians(Angle)
+                Angle = math.cos(Angle)
+                speed_night = speed1*Angle
+                list_speed.append(speed_night)
+                #cal avg speed
+                avg_speed = sum(list_speed)/len(list_speed)
 
-        if cy2> lasttrack:
+            if cy2> lasttrack:
 
-            print("frame_night",frame_crossed3)              #COSINE CORRECTION
-            print("SPEED_NIGHT",avg_speed)
-            print("timedelta",timedelta)
-            speed = (distance/timedelta)
-            print("speed_night_without_adjustments",speed)
-    cv2.circle(frame, maxLoc, 10, (255, 0, 255), -1)
-    cv2.line(frame, (l1_x1, l1_y1), (l1_x2, l1_y2), (0, 255, 0), 1)
-    cv2.line(frame, (l2_x1, l2_y1), (l2_x2, l2_y2), (0, 0, 255), 1)
-    cv2.line(frame, (l1_x1, int((lasttrack))), (l1_x2, int((lasttrack))),(0, 0, 0), 1)
-    cv2.imshow("Robust", frame)
+                print("frame_night",frame_crossed3)              #COSINE CORRECTION
+                print("SPEED_NIGHT",avg_speed)
+                print("timedelta",timedelta)
+                speed = (distance/timedelta)
+                print("speed_night_without_adjustments",speed)
+                if int(avg_speed) > speed_limit and cy2 > lasttrack:
+                    #roi = frame[y-50:y + h, x:x + w]
+                    roi = frame
+                    cv2.imshow("Lane_1", roi)
+                    lane_1_1.append(roi)
+                    send(roi)
+        cv2.circle(frame, maxLoc, 10, (255, 0, 255), -1)
+        cv2.line(frame, (l1_x1, l1_y1), (l1_x2, l1_y2), (0, 255, 0), 1)
+        cv2.line(frame, (l2_x1, l2_y1), (l2_x2, l2_y2), (0, 0, 255), 1)
+        cv2.line(frame, (l1_x1, int((lasttrack))), (l1_x2, int((lasttrack))),(0, 0, 0), 1)
+        cv2.imshow("Robust", frame)
+     
+
     k = cv2.waitKey(1) & 0xff
     if k == ord('q'):
         break
