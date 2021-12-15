@@ -58,7 +58,7 @@ def send(img):
 
 
 # Initialize the video & get FPS
-cap = cv2.VideoCapture('c:\\delme\\test1.mp4')
+cap = cv2.VideoCapture('night1.mp4')
 fps = cap.get(cv2.CAP_PROP_FPS)
 
 
@@ -193,7 +193,8 @@ while True:
     else:
         continue
     if score > 60: # DAY TIME
-        print('Day frame')
+        print('Day frame?!')
+        time.sleep(100000)
 
         framespersecond= int(cap.get(cv2.CAP_PROP_FPS))
         print(framespersecond)
@@ -351,8 +352,7 @@ while True:
     # else:
     #     break
     else:   #NIGHT TIME 
-        print('Night frame!')
-        exit(-1)
+        print('Night frame')
         flag2 = True
         list_speed=[]
        
