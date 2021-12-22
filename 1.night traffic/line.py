@@ -11,6 +11,7 @@ def get_points(img):
     data['lines'] = []
 
     # Set the callback function for any mouse event
+    print(img)
     cv2.imshow("Image", img)
     cv2.setMouseCallback("Image", mouse_handler, data)
     cv2.waitKey(0)
