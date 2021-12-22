@@ -236,9 +236,9 @@ def get_bbox(videostream):
                 cx =int((w/2) + xmin)
                 cy = int((h/2)+ymin)
                 cy_list.append(cy)
-                print("cy_list",cy_list)
+                # print("cy_list",cy_list)
                 cx_list.append(cx)
-                print("cx_list",cx_list)
+                # print("cx_list",cx_list)
                 
                 cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (0, 0, 255), 1)
                 cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
@@ -278,7 +278,7 @@ def get_bbox(videostream):
         time1 = (t2-t1)/freq
         frame_rate_calc= 1/time1
         print(frame_rate_calc)
-        print("cnt",cnt)
+        # print("cnt",cnt)
         cv2.imshow("xyz",frame)
         k = cv2.waitKey(1) & 0xff
         if k == ord('q'):

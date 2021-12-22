@@ -89,7 +89,7 @@ def send(img):
     response = requests.post(api, data=data, timeout=5, headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})
     try:
        data = response.json()     
-       print(data)                
+       print(data)
     except requests.exceptions.RequestException:
        print(response.text)
 
@@ -123,7 +123,7 @@ print("mid",midtrack)
 
 
 ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes,max_cx_,max_cy_ = get_bbox(vs)
-
+# print('ymin', ymin,'xmin', xmin,'ymax', ymax,'xmax', xmax,'object_name', object_name,'label', label,'scores', scores,'frame_rate_calc', frame_rate_calc,'boxes', boxes,'max_cx_', max_cx_,'max_cy_', max_cy_)
 fps = frame_rate_calc
 
 
@@ -178,7 +178,7 @@ vs = VideoStream(resolution=(imW,imH),framerate=30).start()
 
 cnt =0
 flag = True
-
+uniq_ID = 0
 while True:
     ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_cal,boxes,max_cx_,max_cy_ = get_bbox(vs)
     if ymin:
@@ -193,7 +193,7 @@ while True:
             if flag is True and cy <midtrack:
                 print("cy",cy)
                 start_time = datetime.datetime.now()
-
+                uniq_ID += 1
                 flag = False
             # print(cy, midtrack, pt3_pxl)
             if cy > midtrack and cy < pt3_pxl:
@@ -225,6 +225,7 @@ while True:
                             # cv2.imwrite(os.path.join(path, 'carimage_l2_' + str(cnt1)) + '.jpg', roi)
                             cnt += 1
                     flag = True
+                    print(f'uniq_ID = {uniq_ID}')
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 8, cv2.LINE_AA)
 
