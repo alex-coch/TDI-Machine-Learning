@@ -1,3 +1,7 @@
+##EDITED BY ABHISHEK 20/12/2021 : 1:47 AM 
+
+'''NOTES : Threshold Value should be 0.5 else it doesnt give results'''
+
 import numpy as np
 import cv2
 import timeit
@@ -21,7 +25,7 @@ import time
 from threading import Thread
 import importlib.util
 
-global pt3_pxl
+global pt3_pxl,ymin,ymax
 #API endpoint
 #api = 'https://tdispeeddetection.free.beeceptor.com/success'  
 api = 'https://tdinightday.free.beeceptor.com/success'
@@ -68,7 +72,7 @@ global start_time,start_time1,later,later1,starttime,endtime
 def show_angle(speed_limit):
     if speed_limit !=0:
         show_direction = cv2.imread("PromptAngleinfo.JPG")
-        cv2.imshow("Angle Help",show_direction)
+        #cv2.imshow("Angle Help",show_direction)
         k = cv2.waitKey(1) & 0xff
         cv2.waitKey(50)
         Angle = int(input("Enter apporximate Angle with road :")) 
@@ -76,6 +80,8 @@ def show_angle(speed_limit):
         return Angle
 #Prompts user with demo image for choosing right angle.
 Angle = show_angle(speed_limit) #get Angle input 
+Angle = math.radians(Angle)
+Angle = math.cos(Angle)
 
 
 
@@ -98,7 +104,12 @@ def send(img):
 vs = VideoStream()
 vs.stream = cv2.VideoCapture("night1.mp4")
 frame = vs.read()
-line1, line2 = get_points(frame)
+
+frame_ = frame.copy()
+ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes,max_cx_,max_cy_= get_bbox(vs)
+
+line1, line2 = get_points(frame_)
+
 
 
 #for line 1
@@ -122,9 +133,10 @@ print("last",lasttrack)
 print("mid",midtrack)
 
 
-ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes,max_cx_,max_cy_ = get_bbox(vs)
 
-fps = frame_rate_calc
+
+
+
 
 
 ## Function to Auto Calculate the detection range
@@ -132,6 +144,8 @@ fps = frame_rate_calc
 auto calibrates the last reference line on frame, in order to get min of 2 images for detection, code calibrates for ANY SPEED RANGE and any 
 actual distance marked in Meters --- physically on ground, if distance is less say 2 Meters and you want to detect high speed of 120 KMph,code auto
 calculates the new reference line, provided it doesnt fall outside the frame height'''
+
+fps = frame_rate_calc
 
 def max_images(speed_limit,fps,distance,midtrack,starttrack): #midtrack is last line Y pt and starttrack is first line Y pt. First line from TOP.
   
@@ -153,15 +167,11 @@ def max_images(speed_limit,fps,distance,midtrack,starttrack): #midtrack is last 
   else:
     pt3_pxl = midtrack+100
     print("pt3",pt3_pxl)
-  return pt3_pxl
-
-pt3_pxl = max_images(speed_limit,fps,distance,midtrack,starttrack)
-
-locationX =[]
-locationY=[]
+    return pt3_pxl
 
 
-area_s=[]
+
+
 #defining time variables: WARNING : DONT CHANGE THESE AT ALL>>>>>>>
 start_time= datetime.datetime.now()
 start_time1= datetime.datetime.now()
@@ -176,68 +186,82 @@ endtime= datetime.datetime.now()
 vs = VideoStream(resolution=(imW,imH),framerate=30).start()
 #time.sleep(1)
 
-cnt =0
+
 flag = True
+pt3_pxl = max_images(speed_limit,fps,distance,midtrack,starttrack)
+
 
 while True:
-    ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_cal,boxes,max_cx_,max_cy_ = get_bbox(vs)
-    if ymin:
-        w = int(xmax - xmin)
-        h = int(ymax-ymin)
-        cx =int((w/2) + xmin)
-        cy = int((h/2)+ymin)
-        if w >10 and h >10:
-            cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (0, 0, 255), 1)
-            cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
-        if cy > starttrack and w > 10 and h > 10:
-            if flag is True and cy <midtrack:
-                print("cy",cy)
-                start_time = datetime.datetime.now()
+    #ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes = get_bbox(vs)
+    ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes,max_cx_,max_cy_ = get_bbox(vs)
+    fps = frame_rate_calc
+    
+    
+    print("FPS",fps)
+    
+    w = int(xmax - xmin)
+    h = int(ymax-ymin)
+    #cx =int((w/2) + xmin)
+    #cy = int((h/2)+ymin)
+    print("Cy",max_cy_)
+    print("starttrack",starttrack)
+    print("midtrack",midtrack)
+   
 
-                flag = False
-            # print(cy, midtrack, pt3_pxl)
-            if cy > midtrack and cy < pt3_pxl:
-                later = datetime.datetime.now()
-                seconds = (later - start_time).total_seconds()
-                frame_crossed1 = seconds*frame_rate_cal
-                speed_insta = (distance/frame_crossed1)*frame_rate_cal*3.6
-                Angle = math.radians(Angle)
-                Angle = math.cos(Angle)
-                speed = speed_insta*Angle
-                print("SPEED",speed)
-                print("frame_crossed1",frame_crossed1)
-                print("Time taken",seconds)
+    
+    
+    
+    if max_cy_ > starttrack and flag is True and max_cy_ < midtrack:
+        
+        start_time = datetime.datetime.now()
+        print(start_time)
 
-                if seconds <= 0.2:
-                    print("diff 0")
-                else:
-                    if flag is False:
-                        font = cv2.FONT_HERSHEY_SIMPLEX
-                        cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 4, cv2.LINE_AA)
-                        cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 4, cv2.LINE_AA)
-                        # if not os.path.exists(path):
-                        #     os.makedirs(path)
-                        if int(speed) > speed_limit and cy <= lasttrack and w > 70 and h > 100:
-                            roi = frame[ymin-50:ymin + h, xmin:xmin+ w]
-                            cv2.imshow("Lane_1", roi)
-                            # write_name = 'corners_found' + str(cnt1) + '.jpg'
-                            # cv2.imwrite(write_name, roi)
-                            # cv2.imwrite(os.path.join(path, 'carimage_l2_' + str(cnt1)) + '.jpg', roi)
-                            cnt += 1
+        flag = False
+    if flag is False and max_cy_ > midtrack and max_cy_ < (midtrack+100):
+        later = datetime.datetime.now()
+        seconds = (later - start_time).total_seconds()
+        frame_crossed1 = seconds*fps
+        speed_insta = (distance/frame_crossed1)*fps*3.6
+        
+        speed = speed_insta*Angle
+        print("SPEED",speed)
+        print("frame_crossed1",frame_crossed1)
+        print("Time taken",seconds)
+
+        if seconds <= 0.2:
+            print("diff 0")
+        else:
+            if flag is False:
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 4, cv2.LINE_AA)
+                cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 4, cv2.LINE_AA)
+                # if not os.path.exists(path):
+                #     os.makedirs(path)
+                if int(speed) > speed_limit and cy <= lasttrack and w > 70 and h > 100:
+                    roi = frame[ymin-50:ymin + h, xmin:xmin+ w]
+                    cv2.imshow("Lane_1", roi)
+                    # write_name = 'corners_found' + str(cnt1) + '.jpg'
+                    # cv2.imwrite(write_name, roi)
+                    # cv2.imwrite(os.path.join(path, 'carimage_l2_' + str(cnt1)) + '.jpg', roi)
+                    
                     flag = True
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 8, cv2.LINE_AA)
 
             
             
-        cv2.line(frame, (l1_x1, l1_y1), (l1_x2,l1_y2), (0, 255, 0), 1)
-        cv2.line(frame, (l2_x1, l2_y1), (l2_x2,l2_y2), (0, 0, 255), 1)
-        cv2.line(frame,(l1_x1,pt3_pxl),(l1_x2,pt3_pxl),(125,200,127),3)
-        cv2.imshow("Robust",frame )
+    cv2.line(frame, (l1_x1, l1_y1), (l1_x2,l1_y2), (0, 255, 0), 1)
+    cv2.line(frame, (l2_x1, l2_y1), (l2_x2,l2_y2), (0, 0, 255), 1)
+    
+
+        #cv2.line(frame,(l1_x1,pt3_pxl),(l1_x2,pt3_pxl),(125,200,127),3)
+    
+    cv2.imshow("Robust",frame )
 
     k = cv2.waitKey(1) & 0xff
     if k == ord('q'):
         break
 
 cv2.destroyAllWindows()
+vs.stop()
 
