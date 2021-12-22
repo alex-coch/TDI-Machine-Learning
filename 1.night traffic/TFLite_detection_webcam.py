@@ -167,6 +167,8 @@ def get_bbox(videostream):
     xmin =0
     ymax =0
     xmax =0
+    max_cx_ = 0
+    max_cy_ = 0
     object_name =None
     label= None
     scores =None

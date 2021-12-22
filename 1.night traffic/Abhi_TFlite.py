@@ -190,7 +190,7 @@ vs = VideoStream(resolution=(imW,imH),framerate=30).start()
 flag = True
 pt3_pxl = max_images(speed_limit,fps,distance,midtrack,starttrack)
 
-
+uniq_ID = 0
 while True:
     #ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes = get_bbox(vs)
     ymin,xmin,ymax,xmax,object_name,label,scores,frame,frame_rate_calc,boxes,max_cx_,max_cy_ = get_bbox(vs)
@@ -215,7 +215,7 @@ while True:
         
         start_time = datetime.datetime.now()
         print(start_time)
-
+        uniq_ID += 1
         flag = False
     if flag is False and max_cy_ > midtrack and max_cy_ < (midtrack+100):
         later = datetime.datetime.now()
@@ -247,6 +247,7 @@ while True:
                     flag = True
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     cv2.putText(frame, str(int(speed)), (xmin, ymin), font, 2, (255, 255, 255), 8, cv2.LINE_AA)
+                    print(f'uniq_ID = {uniq_ID}')
 
             
             
